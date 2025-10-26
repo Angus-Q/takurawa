@@ -12,20 +12,40 @@ struct DashboardView: View {
     @State private var APICallSuccessResult: String = ""
     
     //-- What is the purpose of @State
-    @State private var APP_TOKEN: String = ""
-    @State private var USER_TOKEN: String = ""
+    @State private var CustomAppToken: String = ""
+    @State private var CustomUserToken: String = ""
     @State private var Accounts: [Account] = []
+    @State private var enabkleEnvVarTokens: Bool = false
+    
+    private var APP_TOKEN: String {
+        if enabkleEnvVarTokens {
+            //-- Requires the user to have a secrets file in their project, if this doesn't exist there will be an error. I'll fix this later on!
+            return Secrets.APP_TOKEN
+        } else { return CustomAppToken }
+    }
+    
+    private var USER_TOKEN: String {
+        if enabkleEnvVarTokens {
+            return Secrets.USER_TOKEN
+        } else { return CustomUserToken }
+    }
     
     var body: some View {
         VStack {
+            
+            Toggle(isOn: $enabkleEnvVarTokens) {
+                Text("Use env var tokens")
+            }
             SecureField(
                 "App Token",
-                text: $APP_TOKEN
+                text: $CustomAppToken
             )
+            .disabled(enabkleEnvVarTokens)
             SecureField(
                 "User Token",
-                text: $USER_TOKEN
+                text: $CustomUserToken
             )
+            .disabled(enabkleEnvVarTokens)
             HStack {
                 Button("Refresh Account Data") {
                     Task {
