@@ -1,5 +1,8 @@
 # Tāku Rawa | Personal Accounting Software
+
 Tāku Rawa, translating directly to 'My Wealth', is a personal accounting software designed to improve how individuals track income and expenses, therefore improving the financial wellbeing of the individual.
+
+![AppIcon](takurawa/Resources/icon_128.png)
 
 # Mission
 To create a free, easy-to-use accounting software for individuals to track and monitor income, expenses, and spending habits.
