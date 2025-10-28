@@ -21,6 +21,9 @@ struct BudgetView: View {
             Button("Edit Budget") {
                 print("Edit Budget")
             }
+            Button("Export Budget Data as CSV") {
+                print("Export Budget Data as CSV")
+            }
         }
         Table(exampleBudgets) {
             TableColumn("Category", value: \.category.name)
