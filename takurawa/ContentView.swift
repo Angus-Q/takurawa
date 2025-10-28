@@ -22,10 +22,10 @@ struct ContentView: View {
                     DashboardView()
                 }
                 Tab("Budget", systemImage: "creditcard.fill", value: 2) {
-                    Text("Hello World")
+                    BudgetView()
                 }
                 Tab("Transactions", systemImage: "list.bullet.clipboard", value: 3) {
-                    Text("How are you?")
+                    TransactionsView()
                 }
             }
         }
