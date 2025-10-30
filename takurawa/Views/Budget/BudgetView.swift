@@ -30,7 +30,7 @@ struct BudgetView: View {
             TableColumn("Description", value: \.description)
             TableColumn("Amount", value: \.budgetAsString)
         }
-        
+        NewBudgetView()
     }
     
 }
