@@ -13,6 +13,11 @@ struct GetAllAccountsResponse: Decodable {
     let items: [Account]
 }
 
+struct GetAllTransactionResponse: Decodable {
+    let success: Bool
+    let items: [Transaction]
+}
+
 func refreshAccountData(USER_TOKEN: String, APP_TOKEN: String) async throws {
     //-- Refresh to obtain the latest Akahu Data
     guard let refresh_url = URL(string: "https://api.akahu.io/v1/refresh") else {
@@ -61,4 +66,43 @@ func fetchAccountData(USER_TOKEN: String, APP_TOKEN: String) async throws -> [Ac
     else {
         return []
     }
+}
+
+func fetchTransactionData(USER_TOKEN: String, APP_TOKEN: String, START_DATE: Date, END_DATE: Date) async throws -> [Transaction] {
+        
+    var components = URLComponents(string: "https://api.akahu.io/v1/transactions")!
+    
+    let dateFormatter = ISO8601DateFormatter()
+    components.queryItems = [
+        URLQueryItem(name: "start", value: dateFormatter.string(from: START_DATE)),
+        URLQueryItem(name: "end", value: dateFormatter.string(from: END_DATE))
+    ]
+
+    guard let url = components.url else {
+        throw URLError(.badURL)
+    }
+
+    var request = URLRequest(url: url)
+    
+    request.httpMethod = "GET"
+    request.addValue("Bearer \(USER_TOKEN)", forHTTPHeaderField: "Authorization")
+    request.addValue(APP_TOKEN, forHTTPHeaderField: "X-Akahu-Id")
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+    
+    guard let httpResponse = response as? HTTPURLResponse,
+              (200..<300).contains(httpResponse.statusCode) else {
+            print("Something went wrong: \(response)")
+            throw URLError(.badServerResponse)
+        }
+
+    let decodedJSONData = try JSONDecoder().decode(GetAllTransactionResponse.self, from: data)
+    if (decodedJSONData.success) {
+        return decodedJSONData.items
+    }
+    
+    else {
+        return []
+    }
+    
 }
