@@ -18,6 +18,8 @@ struct TransactionsView: View {
     @State var checkBox: Bool = false
     @State var text1: String = ""
     
+    @State private var selectedTransaction: String? = nil
+    
     let dateFormatter = ISO8601DateFormatter()
     
     //-- Payment Filter 1
@@ -25,6 +27,10 @@ struct TransactionsView: View {
 
     var totalExpenditure: Decimal {
         filteredAccountTransactions.reduce(0) { $0 + $1.amount }
+    }
+    
+    var transactionToDetail: Transaction? {
+        return AllAccountTransactions.first { $0.id == selectedTransaction }
     }
     
     var body: some View {
@@ -59,40 +65,67 @@ struct TransactionsView: View {
                 }
             }
         }
-        Table(filteredAccountTransactions) {
-            TableColumn("Description") {transaction in
-                Text(
-                    transaction.description,
-                )
-                .textSelection(.enabled)
+        HStack {
+            Table(AllAccountTransactions, selection: $selectedTransaction) {
+                //-- Date
+                TableColumn("Date") { transaction in
+                    Text({
+                        let iso = ISO8601DateFormatter()
+                        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+                        let out = DateFormatter()
+                        out.dateFormat = "MMMM d, yyyy"
+                        out.locale = Locale(identifier: "en_US_POSIX")
+
+                        return iso.date(from: transaction.date).map { out.string(from: $0) } ?? "Invalid date"
+                    }())
+                }
+                
+                TableColumn("Transaction") {transaction in
+                    Text(
+                        transaction.description,
+                    )
+                    .textSelection(.enabled)
+                }
+                TableColumn("Withdrawls") { transaction in
+                    Text({
+                        if transaction.amount.formatted() <= "0.00" {
+                            return transaction.amount.formatted(.currency(code: "NZD"))
+                        } else {
+                            return ""
+                        }
+                    }())
+                }
+                TableColumn("Deposits") { transaction in
+                    Text({
+                        if transaction.amount.formatted() >= "0.00" {
+                            return transaction.amount.formatted(.currency(code: "NZD"))
+                        } else {
+                            return ""
+                        }
+                    }())
+                }
+                TableColumn("Balance") { transaction in
+                    Text(transaction.balance.formatted(.currency(code: "NZD")))
+                }
+                TableColumn("Marked") { transaction in
+                    Toggle("", isOn: $checkBox)
+                        .toggleStyle(.checkbox)
+                }
             }
-            TableColumn("Amount") { transaction in
-                Text(transaction.amount.formatted(.currency(code: "NZD")))
-            }
-            TableColumn("Balance") { transaction in
-                Text(transaction.balance.formatted(.currency(code: "NZD")))
-            }
-            TableColumn("Date", value: \.date)
-            TableColumn("Type", value: \.type)
-            TableColumn("Marked") { transaction in
-                Toggle("", isOn: $checkBox)
-                    .toggleStyle(.checkbox)
+            
+            
+            //-- Problem here, no @State variable...
+            if (transactionToDetail != nil) {
+                TransactionDetail(transaction: transactionToDetail!)
+            } else {
+                Text("No transaction selected")
             }
         }
-        
         HStack {
             Text("Total expenditure for the selected period: \(totalExpenditure)")
             Spacer()
             Text("Selected period starts from \(startDate.formatted(date: .long, time: .omitted)) and ends at \(endDate.formatted(date: .long, time: .omitted))")
-        }
-        
-        ScrollView {
-            LazyVStack(alignment: .leading) {
-                //-- Implicitly ignore args for closure
-                ForEach(1...10, id: \.self) { _ in
-                    TransactionDetail()
-                }
-            }
         }
     }
 }
