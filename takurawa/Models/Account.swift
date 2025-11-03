@@ -31,7 +31,7 @@ struct AccountBalance: Decodable {
     let currency: String
     let current: Decimal
     let available: Decimal
-    let limit: Decimal
+    let limit: Decimal?
     let overdrawn: Bool
 }
 

@@ -15,6 +15,8 @@ struct Transaction: Decodable, Identifiable {
         case amount
         case balance
         case type
+        case merchant
+        case category
     }
     
     let id: String
@@ -23,4 +25,16 @@ struct Transaction: Decodable, Identifiable {
     let amount: Decimal
     let balance: Decimal
     let type: String
+    let merchant: Merchant?
+    let category: tCategory?
+}
+
+struct Merchant: Decodable {
+    let name: String
+    let website: String?
+}
+
+//-- Should this become just category?
+struct tCategory: Decodable {
+    let name: String
 }
