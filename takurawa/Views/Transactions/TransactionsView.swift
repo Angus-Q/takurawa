@@ -13,7 +13,6 @@ struct TransactionsView: View {
     @State private var endDate = Date()
     
     @State var AllAccountTransactions: [Transaction] = []
-    @State var filteredAccountTransactions: [Transaction] = []
     
     @State var checkBox: Bool = false
     @State var text1: String = ""
@@ -23,10 +22,6 @@ struct TransactionsView: View {
     //-- Payment Filter 1
     private var filter1: [String] = ["CREDIT CARD", "EFTPOS", "STANDING ORDER", "PAYMENT"]
 
-    var totalExpenditure: Decimal {
-        return filteredAccountTransactions.reduce(0) { $0 + $1.amount }
-    }
-    
     @State private var selectedTransactionIDFromTable: String? = nil
     
     var transactionInFocus: Transaction? {
@@ -38,21 +33,7 @@ struct TransactionsView: View {
     var body: some View {
         VStack {
             HStack {
-                //-- _ made it a <State>String, but idk what this is.
-                if (selectedTransactionIDFromTable != nil) {
-                    //-- Force Unwrap and pass the data to the subview!
-                    //-- There must be a better way to create this, but maybe this will allow multiple selection? If thats something worthwhile...
-                    ForEach(AllAccountTransactions) { t in
-                        if t.id == selectedTransactionIDFromTable {
-                            TransactionDetail(transaction: t)
-                        }
-                    }
-                } else {
-                    Text("Select a row from the table to view more details.")
-                }
-                
                 Spacer()
-                
                 VStack {
                     DatePicker(
                         "Start Date",
@@ -68,27 +49,36 @@ struct TransactionsView: View {
                         Task {
                             do {
                                 AllAccountTransactions = try await fetchTransactionData(USER_TOKEN: Secrets.USER_TOKEN, APP_TOKEN: Secrets.APP_TOKEN, START_DATE: startDate, END_DATE: endDate)
-                                filteredAccountTransactions = []
-                                for transaction in AllAccountTransactions {
-                                    //                        print(transaction.type)
-                                    //-- Only less than 0 filter may be required!
-                                    if (filter1.contains(transaction.type) && transaction.amount < 0) {
-                                        filteredAccountTransactions.append(transaction)
-                                    }
-                                }
-                                
                             } catch {
                                 print("Error getting data: \(error)")
                             }
                         }
                     }
                 }
+                .padding(.top, 10)
+                .padding(.bottom, 10)
+            }
+            
+            VStack(alignment: .leading) {
+                Divider()
             }
             HStack {
-                
+                //-- _ made it a <State>String, but idk what this is.
+                if (selectedTransactionIDFromTable != nil) {
+                    //-- Force Unwrap and pass the data to the subview!
+                    //-- There must be a better way to create this, but maybe this will allow multiple selection? If thats something worthwhile...
+                    ForEach(AllAccountTransactions) { t in
+                        if t.id == selectedTransactionIDFromTable {
+                            TransactionDetail(transaction: t)
+                        }
+                    }
+                } else {
+                    Text("Select a row from the table to view more details.")
+                }
                 Spacer()
             }
-            VStack {
+            Divider()
+            VStack(alignment: .leading) {
                 Table(AllAccountTransactions, selection: $selectedTransactionIDFromTable) {
                     //-- Date
                     TableColumn("Date") { transaction in
@@ -103,7 +93,6 @@ struct TransactionsView: View {
                             return iso.date(from: transaction.date).map { out.string(from: $0) } ?? "Invalid date"
                         }())
                     }
-                    
 
                     TableColumn("Transaction") { transaction in
                         Text(
@@ -147,7 +136,6 @@ struct TransactionsView: View {
                 //            }
             }
             HStack {
-                Text("Total expenditure for the selected period: \(totalExpenditure)")
                 Spacer()
                 Text("Selected period starts from \(startDate.formatted(date: .long, time: .omitted)) and ends at \(endDate.formatted(date: .long, time: .omitted))")
             }

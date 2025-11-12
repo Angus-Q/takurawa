@@ -7,6 +7,17 @@
 
 import SwiftUI
 
+//-- to replace Category
+struct Category2 {
+    
+    let name: String
+    
+    init(name: String) {
+        self.name = name
+    }
+    
+}
+
 struct BudgetView: View {
     
     //-- Create a CSV file (w/ a plus button) - maybe store it in another way?
@@ -15,9 +26,44 @@ struct BudgetView: View {
     
     @State private var bCategory: String = ""
     
+    @State private var categories: [Category2] = []
+    
+    @State private var showPopover: Bool = false
+    
     var body: some View {
         HStack() {
             Spacer()
+            Button("New Category") {
+                print("New category")
+                
+            }
+            
+            Button("Show Category Popover") {
+                showPopover.toggle()
+            }
+            .popover(isPresented: $showPopover, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
+                VStack {
+                    Text("Product Information")
+                        .font(.headline)
+                    TextField(
+                        "Category",
+                        text: $bCategory
+                    )
+                    Button("Submit") {
+                        showPopover = false
+                        categories.append(Category2(name: bCategory))
+                    }
+                }
+                .padding()
+                .frame(width: 200, height: 150) // Optional: set a fixed size for the popover content
+            }
+            
+            Button("Display Categories Added") {
+                for i in categories {
+                    print("Category: \(i.name)")
+                }
+            }
+            
             Button("New Budget") {
                 print("New Budget")
             }
@@ -41,5 +87,4 @@ struct BudgetView: View {
         }
         NewBudgetView()
     }
-    
 }

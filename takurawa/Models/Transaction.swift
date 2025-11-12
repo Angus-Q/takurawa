@@ -27,14 +27,54 @@ struct Transaction: Decodable, Identifiable {
     let type: String
     let merchant: Merchant?
     let category: tCategory?
+    
+    init(
+         id: String,
+         date: String,
+         description: String,
+         amount: Decimal,
+         balance: Decimal,
+         type: String,
+         merchant: Merchant?,
+         category: tCategory?,) {
+        
+        self.id = id
+        self.date = date
+        self.description = description
+        self.amount = amount
+        self.balance = balance
+        self.type = type
+        self.merchant = merchant
+        self.category = category
+        
+    }
+}
+
+struct Cursor: Decodable {
+    let next: String?
+    
+    init(next: String?) {
+        self.next = next
+    }
 }
 
 struct Merchant: Decodable {
     let name: String
     let website: String?
+    
+    init(name: String, website: String) {
+        self.name = name
+        self.website = website
+    }
+    
 }
 
 //-- Should this become just category?
 struct tCategory: Decodable {
     let name: String
+    
+    init(name: String) {
+        self.name = name
+    }
+    
 }

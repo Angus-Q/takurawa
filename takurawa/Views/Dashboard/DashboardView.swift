@@ -48,6 +48,7 @@ struct DashboardView: View {
             .disabled(enabkleEnvVarTokens)
             HStack {
                 Button("Refresh Account Data") {
+                    print("Hello world!!!!!")
                     Task {
                         do {
                             try await refreshAccountData(USER_TOKEN: USER_TOKEN, APP_TOKEN: APP_TOKEN)

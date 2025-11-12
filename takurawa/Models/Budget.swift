@@ -22,7 +22,6 @@ struct Budget: Identifiable {
         self.description = description
         self.budget = budget
     }
-    
 }
 
 struct Category: Identifiable {

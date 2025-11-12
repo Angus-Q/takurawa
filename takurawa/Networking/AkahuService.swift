@@ -16,6 +16,7 @@ struct GetAllAccountsResponse: Decodable {
 struct GetAllTransactionResponse: Decodable {
     let success: Bool
     let items: [Transaction]
+    let cursor: Cursor?
 }
 
 func refreshAccountData(USER_TOKEN: String, APP_TOKEN: String) async throws {
@@ -68,41 +69,49 @@ func fetchAccountData(USER_TOKEN: String, APP_TOKEN: String) async throws -> [Ac
     }
 }
 
-func fetchTransactionData(USER_TOKEN: String, APP_TOKEN: String, START_DATE: Date, END_DATE: Date) async throws -> [Transaction] {
-        
-    var components = URLComponents(string: "https://api.akahu.io/v1/transactions")!
-    
+func fetchTransactionData(USER_TOKEN: String, APP_TOKEN: String, START_DATE: Date, END_DATE: Date, CURSOR: String? = nil) async throws -> [Transaction] {
     let dateFormatter = ISO8601DateFormatter()
-    components.queryItems = [
+    
+    var transactions: [Transaction] = []    //-- Empty array of transaction items
+    var c: String? = nil                    //-- local cursor
+    
+    let qi: [URLQueryItem] = [
         URLQueryItem(name: "start", value: dateFormatter.string(from: START_DATE)),
         URLQueryItem(name: "end", value: dateFormatter.string(from: END_DATE))
     ]
-
-    guard let url = components.url else {
-        throw URLError(.badURL)
-    }
-
-    var request = URLRequest(url: url)
     
-    request.httpMethod = "GET"
-    request.addValue("Bearer \(USER_TOKEN)", forHTTPHeaderField: "Authorization")
-    request.addValue(APP_TOKEN, forHTTPHeaderField: "X-Akahu-Id")
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-    
-    guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
+    //-- Some exit would be appropiate so this loop doesn't hang!
+    while (true) {
+        //-- 1. Create the URL
+        guard var url = URL(string: "https://api.akahu.io/v1/transactions") else {
+                throw URLError(.badURL)
+        }
+        //-- 2. Add the Query Parameters, and cursor if it exists
+        var qi_copy = qi
+        if (c != nil) {
+            qi_copy.append(URLQueryItem(name: "cursor", value: c))
+        }
+        url.append(queryItems: qi_copy)  //-- Append query items to the URL
+        //-- 3. Create the request + add quth headers
+        var request = URLRequest(url: url)
+        request.addValue("Bearer \(USER_TOKEN)", forHTTPHeaderField: "Authorization")
+        request.addValue(APP_TOKEN, forHTTPHeaderField: "X-Akahu-Id")
+        //-- 4. Make the request
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+            (200..<300).contains(httpResponse.statusCode) else {
             print("Something went wrong: \(response)")
             throw URLError(.badServerResponse)
         }
-
-    let decodedJSONData = try JSONDecoder().decode(GetAllTransactionResponse.self, from: data)
-    if (decodedJSONData.success) {
-        return decodedJSONData.items
-    }
-    
-    else {
-        return []
+        
+        let decodedJSONData = try JSONDecoder().decode(GetAllTransactionResponse.self, from: data)
+        transactions.append(contentsOf: decodedJSONData.items)  //-- add multiple elements to the array
+        //-- Not nil, then
+        if (decodedJSONData.cursor?.next != nil) {
+            c = decodedJSONData.cursor!.next
+        } else {
+            return transactions
+        }
     }
     
 }
